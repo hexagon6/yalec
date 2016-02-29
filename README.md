@@ -1,5 +1,5 @@
 # yalec
-yalec is Yet Another LE Client
+yalec is Yet Another Let's Encrypt Client
 
 Note: This is yet work in progress. While signing a CSR will basically work,
 using the client is not yet very convenient, as it still lacks documentation
