@@ -1,2 +1,2 @@
 # yalec
-yalic is Yet Another LE Client
+yalec is Yet Another LE Client
