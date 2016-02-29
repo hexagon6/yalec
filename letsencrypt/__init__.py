@@ -205,38 +205,6 @@ class LeService(object):
             return False, None
             
         
-
-
-# def newCert(acmeDir, nonce):
-#     csr = getCSR()
-#     postArr = {"resource" : "new-cert", "csr": csr }
-#     postData = getPostData(nonce, postArr)
-#     c, header, data = postCurl(acmeDir[u"new-cert"], postData, ["Nonce: %s" % (nonce)])
-#     c.perform()
-#     rc = int(c.getinfo(c.RESPONSE_CODE))
-#     if not rc == 201:
-#         data.reset()
-#         structure = json.load(data)
-#     else:
-#         structure = { "location" : unheader(header, "Location") }
-#     printResp(structure)
-#     return int(c.getinfo(c.RESPONSE_CODE)), header, structure
-# 
-# def getCert(location):
-#     for I in range(20):
-#         c, header, data = getCurl(location)
-#         c.perform()
-#         rc = int(c.getinfo(c.RESPONSE_CODE))
-#         if rc != 202:
-#             break
-#         timeout = int(unheader("Retry-After"))
-#         sleep(timeout)
-#     if rc == 200:
-#         cert = data
-#         data = StringIO()
-#         certToPEM(data, cert.getvalue())
-#     return rc, header, data
-
     def createMailContact(self, mail):
         '''
         Creates a new mail contact to be used during account registration.
