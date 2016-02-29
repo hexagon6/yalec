@@ -1,9 +1,3 @@
-'''
-Created on 15.02.2016
-
-@author: falk
-'''
-
 import config
 from config import Certificate, CertificateSigningRequest, KeyPair, HttpProvider, Authenticators
 import json
