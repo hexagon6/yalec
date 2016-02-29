@@ -2,7 +2,7 @@ from pycurl import Curl
 from cStringIO import StringIO
 import json
 import re
-
+from urlparse import urlparse
 from time import sleep
 
 import logging
@@ -134,7 +134,8 @@ class LeService(object):
         @raise Exception: This method raises an exception on any error.
         """
         logging.debug("request directory for %s", self.__baseUrl)
-        http = self.__HttpProvider(self.__baseUrl)
+        self.__urlOk(self.__baseUrl)
+        http = self.__newHttp(self.__baseUrl)
         http.prepareGet()
         resp = http.perform()
         if resp <> 200:
@@ -158,7 +159,7 @@ class LeService(object):
         logging.info("perform new registration for contact: %s" % (", ".join(contact)))
         postArr = {"resource" : "new-reg", "contact" : contact, "agreement" : agreement }
         postData = self.__userKey.signJsonArray(postArr, self.__nonce)
-        http = self.__HttpProvider(self.__directory["new-reg"])
+        http = self.__newHttp(self.__directory["new-reg"])
         http.preparePost(postData, ["Nonce: %s" % (self.__nonce),])
         resp = http.perform()
         data = http.getData()
@@ -186,6 +187,7 @@ class LeService(object):
         if len(challenges) == 0:
             raise Exception("no valid combination of challenges found", None)
         for challenge in challenges:
+            self.__checkToken(challenge["token"])
             keyAuthorization = ".".join([challenge["token"], self.__userKey.getJwkThumbprint()])
             auth = self.prepareChallenge(challenge, keyAuthorization)
             triggerResp = self.triggerChallenge(challenge, keyAuthorization)
@@ -215,7 +217,7 @@ class LeService(object):
         """
         postArr = {"resource" : "new-authz", "identifier" : identifier}
         postData = self.__userKey.signJsonArray(postArr, self.__nonce)
-        http = self.__HttpProvider(self.__directory["new-authz"])
+        http = self.__newHttp(self.__directory["new-authz"])
         http.preparePost(postData, ["Nonce: %s" % (self.__nonce),])
         resp = http.perform()
         data = http.getData()
@@ -292,7 +294,7 @@ class LeService(object):
         """
         postArr = {"resource" : "challenge", "type" : challenge["type"], "keyAuthorization" : keyAuthorization }
         postData = self.__userKey.signJsonArray(postArr, self.__nonce)
-        http = self.__HttpProvider(challenge["uri"])
+        http = self.__newHttp(challenge["uri"])
         http.preparePost(postData, ["Nonce: %s" % (self.__nonce),])
         resp = http.perform()
         data = http.getData()
@@ -321,7 +323,7 @@ class LeService(object):
         @param uri: The uri to tech for authentication done.
         """
         for I in range(5):
-            http = self.__HttpProvider(uri)
+            http = self.__newHttp(uri)
             http.prepareGet(["Nonce: %s" % (self.__nonce),])
             resp = http.perform()
             data = http.getData()
@@ -346,7 +348,7 @@ class LeService(object):
         logging.info("request cert")
         postArr = {"resource" : "new-cert", "csr": csr.getJwsFormat()}
         postData = self.__userKey.signJsonArray(postArr, self.__nonce)
-        http = self.__HttpProvider(self.__directory["new-cert"])
+        http = self.__newHttp(self.__directory["new-cert"])
         http.preparePost(postData, ["Nonce: %s" % (self.__nonce),])
         resp = http.perform()
         data = http.getData()
@@ -363,7 +365,7 @@ class LeService(object):
         logging.info("wait for certificate")
         location = self.__getLocation(http)
         for I in range(4):
-            http = self.__HttpProvider(location)
+            http = self.__newHttp(location)
             http.prepareGet(["Nonce: %s" % (self.__nonce),])
             resp = http.perform()
             data = http.getData()
@@ -475,3 +477,39 @@ class LeService(object):
         if structure is not None and structure.has_key("detail"):
             message += " (%s)" % (structure["detail"])
         return message
+    
+    def __urlOk(self, url):
+        """
+        Checks, if the given URL is within the domain of the BASE url.
+        
+        @param url: The url to be checked.
+        @raise Exception: If URL is not within the services domain, an
+            exception is caused.
+        """
+        base = urlparse(self.__baseUrl)
+        site = urlparse(url)
+        if not site.hostname == base.hostname:
+            raise Exception("hostname mismatch: base=%s, url=%s" % (base.hostname, site.hostname))
+    
+    def __newHttp(self, url):
+        """
+        Creates a new instance of the HTTP provider for the given URL.
+        
+        @param url: The url to request.
+        @return: HTTP provider to access the URL.
+        """
+        self.__urlOk(url)
+        return self.__HttpProvider(url)
+
+    def __checkToken(self, token):
+        """
+        Checks, if the token only contains valid characters.
+        
+        @param token: The token to be checked.
+        @raise Exception: An exception is raised, if token contains invalid
+            characters.
+        """
+        rex = re.compile("^[a-zA-Z0-9-_]*$")
+        if rex.match(token) is None:
+            raise Exception("invalid token")
+
