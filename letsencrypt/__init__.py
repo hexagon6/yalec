@@ -8,6 +8,9 @@ from time import sleep
 
 import logging
 
+# specification at https://ietf-wg-acme.github.io/acme/
+# TODO: 6.4, 6.5, 6.8
+# TODO: handle responses, raise exceptions on error
 class LeService(object):
     NEW_AUTHZ   = u'new-authz'
     NEW_REG     = u'new-reg'
@@ -58,6 +61,10 @@ class LeService(object):
         data = http.getData()
         structure = json.load(data)
         self.__keepNonce(http)
+        # TODO: handle responses 201: ok, 409: conflict else: raise exception
+        # TODO: keep "Location" header for reg modification
+        # TODO: write structure to file to be able to modify keep registration information
+        # TODO: add function to update/read registation (seet 6.3.)
         if resp == 201:
             logging.info("registration has been successful")
             return True, structure
