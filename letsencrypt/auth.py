@@ -4,10 +4,38 @@ from config import WEBDIR, CHALLENGE_PREFIX
 import logging
 
 class HttpAuthenticator(object):
+    """
+    Definition of a simple HTTP authenticator. That class reflects the
+    authentication for http-01 protocol.
+    
+    A http-01 authenticator basically places a file into a specific directory
+    that is reached via HTTP on the domain to be authenticated. The
+    specification requires that a file with the name of a token provided as
+    response on the new-auth is available at 
+    http://<dnsname>/.well-known/acme-challenge/
+    that contains the token and the JWK thumbprint of the user-key separated
+    by ".".
+    """
     def __init__(self):
+        """
+        Just the default constructor.
+        """
         pass
 
     def prepare(self, userKey, challenge, keyAuthorization):
+        """
+        Creates the challenge file. It will also create the necessary directory
+        structure, if it does not exist.
+        
+        This method needs proper permissions on the location of the auth-file.
+        
+        @param userKey: The userKey that is used during the challenge.
+        @param challenge: The definition of the challenge as provided by the
+            remote server. This is just the structure loaded from JSON. This
+            structure has to contain the "token" index.
+        @param keyAuthorization: The JWK thubmprint of the user-key. This will
+            be written to the file.
+        """
         self.__chllDir = path.join(WEBDIR, CHALLENGE_PREFIX)
         chllFile = path.join(self.__chllDir, challenge["token"])
         logging.info("try to create authorization file %s" % (chllFile))
@@ -21,6 +49,9 @@ class HttpAuthenticator(object):
         self.__chllFile = chllFile
     
     def cleanup(self):
+        """
+        Deletes the challenge file.
+        """
         logging.info("remove authorization file")
         if self.__chllFile is not None:
             remove(self.__chllFile)
