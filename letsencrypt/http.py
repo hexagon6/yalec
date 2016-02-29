@@ -4,16 +4,16 @@ from cStringIO import StringIO
 import logging
 
 class HttpProviderCurl(object):
-    '''
+    """
     Abstracts the HTTP interface to allow replacing the library used for
     connecting by something differend from pycurl.
-    '''
+    """
     def __init__(self, url):
-        '''
+        """
         Constructs a new class.
         
         @param url: The url to access by the HttpProvider.
-        '''
+        """
         logging.debug("create HttpProviderCurl for %s" % (url))
         self.__url = url
         self.__response = 0
@@ -21,9 +21,14 @@ class HttpProviderCurl(object):
         self.__data = StringIO()
     
     def prepareGet(self, moreHeader = []):
-        '''
+        """
         Prepares a HTTP GET request for the URL provided during initialization.
-        '''
+        
+        @param moreHeader: An optional list of headers to be appended to the
+            HTTP requests headers. This list must contain string values of the
+            form <param>: <value> as they are directly injected into the HTTP
+            header.
+        """
         logging.debug("prepare GET")
         self.__data = StringIO()
         self.__response = 0
@@ -40,13 +45,19 @@ class HttpProviderCurl(object):
 
     
     def preparePost(self, postData, moreHeader = []):
-        '''
+        """
         Creates a HTTP POST request for the URL provided during initialization.
+        
+        This method sets the Content-Type to "application/json", so this should
+        only be used when posting JSON data.
         
         @param postData: The data to be delivered via POST request encoded as
           string.
-        @param moreHeader: 
-        '''
+        @param moreHeader: An optional list of headers to be appended to the
+            HTTP requests headers. This list must contain string values of the
+            form <param>: <value> as they are directly injected into the HTTP
+            header.
+        """
         self.prepareGet(['Content-Type: application/json', 'Accept: application/json'] + moreHeader)
         logging.debug("switch to POST")
         c = self.__curl
@@ -56,11 +67,17 @@ class HttpProviderCurl(object):
         return True
 
     def perform(self):
-        '''
+        """
         Performs the HTTP request.
         
-        @return Response-code for the HTTP request as integer.
-        '''       
+        This performs the request that has been set up by prepareGet or
+        preparePost before.
+        
+        This method will block until the request has finished and will fill the
+        response, header and data-fields.
+        
+        @return The HTTP-response code as integer.
+        """       
         c = self.__curl
         c.perform()
         self.__data.reset()
@@ -71,33 +88,50 @@ class HttpProviderCurl(object):
         return self.__response
 
     def getHeader(self, key):
-        '''
-        Returns all headers with the given name.
+        """
+        Returns all headers with the given name. This function will only return
+        sane information after the query has been performed.
         
-        @param key: Name of the reader to be returned.
+        @param key: Name of the reader to be returned. The key is handled
+            case-insensitive during lookup.
         @return List of header fields.
-        '''
+        """
         rc = []
         for k, v in self.__header:
             if k.lower() == key.lower():
                 rc.append(v)
         return rc
 
+    def getContentType(self):
+        """
+        Returns the Content-Type after the request has been performed.
+        
+        The resulting string will be empty, if the server did not set the
+        response header.
+        """
+        h = self.getHeader("Content-Type")
+        if len(h) == 0:
+            return ""
+        return h[0]
+
     def getData(self):
-        '''
-        Retuens the stream object containing the data that has been received
+        """
+        Returns the stream object containing the data that has been received
         by the request.
         
+        The data-object is reset directly after the response has been read and
+        it can be used for reading without any further reset.
+        
         @return Data received.
-        '''
+        """
         return self.__data
 
     def __writeHeader(self, data):
-        '''
-        Preserves one line of HTTP header data.
+        """
+        Internally stores a line of header data to the header-buffer.
         
         @param data The line of header to be saved.
-        '''
+        """
         if data.startswith("HTTP/1"):
             logging.debug(data.strip())
             data = "Response: %s" % (data)
