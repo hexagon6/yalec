@@ -1,14 +1,10 @@
 import config
 from config import Certificate, CertificateSigningRequest, KeyPair, HttpProvider, Authenticators
-import json
 from cStringIO import StringIO
-from pycurl import Curl
 from letsencrypt import LeService
 from letsencrypt import cert
 
 import logging
-
-from sys import exit
 
 if __name__ == '__main__':
     logging.basicConfig(level = logging.DEBUG)
