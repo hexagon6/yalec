@@ -2,6 +2,16 @@ from base64 import b64encode, b64decode, urlsafe_b64encode
 from textwrap import wrap
 from binascii import unhexlify
 
+def consoleCleanBinary(data):
+    """
+    Walks over the data-buffer given and writes it to a new buffer replacing
+    characters that should not be presented on a console by dots.
+    
+    @param data: The data to be replaced.
+    @return: Console safe string.
+    """
+    return ''.join([i if ord(i) < 127 and ord(i) > 31 else '.' for i in data])
+    
 def toPem(data):
     """
     Converts the given data object to a base64 encoded string that is wrapped
