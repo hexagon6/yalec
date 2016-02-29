@@ -2,6 +2,7 @@ from pycurl import Curl
 from cStringIO import StringIO
 
 import logging
+from encoding import consoleCleanBinary
 
 class HttpProviderCurl(object):
     """
@@ -43,7 +44,6 @@ class HttpProviderCurl(object):
         self.__curl = c
         return True
 
-    
     def preparePost(self, postData, moreHeader = []):
         """
         Creates a HTTP POST request for the URL provided during initialization.
@@ -84,7 +84,8 @@ class HttpProviderCurl(object):
         resp = c.getinfo(c.RESPONSE_CODE)
         self.__response = int(resp)
         logging.info("%s: %s" % (resp, self.__url))
-        logging.debug("data: %s" % (self.__data.getvalue()))
+        cleanData = consoleCleanBinary(self.__data.getvalue())
+        logging.debug("data: %s" % (cleanData))
         return self.__response
 
     def getHeader(self, key):
