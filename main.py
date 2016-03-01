@@ -29,8 +29,11 @@ if __name__ == '__main__':
     regResp = le.newReg(le.createMailContact(config.EMAIL), config.TERMS)
     #     if regResp.success is false, the user already existed. otherwise
     #     there would have been an exception
+    #     the accounts page is returned via regResp.location. this allows
+    #     reading or updating the users account
     if not regResp.success:
         print "user already registered"
+        print "user details can be accessed/changed at: %s" % (regResp.location)
     
     # 6.) perform authentication for the domain. this will raise an exception,
     #     if it fails
@@ -44,4 +47,9 @@ if __name__ == '__main__':
     buffer = StringIO()
     cert.toPem(buffer)
     print buffer.getvalue()
+    
+    # 9.) certificate can be revoked by just passing it to the proper function
+    le.revokeCert(cert)
+    le.revokeCert(cert)
+    
 
