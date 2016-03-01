@@ -6,18 +6,35 @@ import encoding
 
 from Crypto.PublicKey import RSA
 
-class CertificateSigningRequest(object):
+class X509Base(object):
     """
-    This object represents a CSR.
+    Base class for certificates and x509 objects. This provides import and
+    export functions.
     """
     def __init__(self):
         """
         Constructor.
-        
-        The constructor just creates an empty object.
         """
         self.__data = None
     
+    def _setBeginEnd(self, begin, end):
+        """
+        Setter for the begin and end markers in PEM structures.
+        
+        @param begin: The begin marker.
+        @param end: The end marker.
+        """
+        self.__begin = begin
+        self.__end = end
+        
+    def getData(self):
+        """
+        Getter for the data object.
+        
+        @return: The data object.
+        """
+        return self.__data
+
     def valid(self):
         """
         Returns true, if CSR has data loaded. This actually does not check
@@ -27,7 +44,7 @@ class CertificateSigningRequest(object):
         @return: True, if valid.
         """
         return self.__data is not None and len(self.__data) > 0
-    
+
     def load(self, fp, fmt = "PEM"):
         """
         Loads a CSR from file or a stream.
@@ -37,7 +54,7 @@ class CertificateSigningRequest(object):
         @raise Exception: If data cannot be read, an exception is raised.
         """
         if fmt == "PEM":
-            self.__data = encoding.fromPem(fp, "-----BEGIN CERTIFICATE REQUEST-----", "-----END CERTIFICATE REQUEST-----")
+            self.__data = encoding.fromPem(fp, self.__begin, self.__end)
             if len(self.__data) == 0:
                 raise Exception("failed to import data as PEM")
             return True
@@ -45,7 +62,7 @@ class CertificateSigningRequest(object):
             self.__data = fp.read()
             return True
         raise Exception("unknown format %s" % (fmt))
-    
+
     def getJwsFormat(self):
         """
         Returns the data as special JWS encoded base64.
@@ -62,11 +79,24 @@ class CertificateSigningRequest(object):
         
         @param fp: The file to write to.
         """
-        fp.write("-----BEGIN CERTIFICATE REQUEST-----\n")
+        fp.write("%s\n" % (self.__begin))
         fp.write(encoding.toPem(self.__data))
-        fp.write("-----END CERTIFICATE REQUEST-----\n")
+        fp.write("%s\n" % (self.__end))
 
-class Certificate(object):
+class CertificateSigningRequest(X509Base):
+    """
+    This object represents a CSR.
+    """
+    def __init__(self):
+        """
+        Constructor.
+        
+        The constructor just creates an empty object.
+        """
+        self.__data = None
+        self._setBeginEnd("-----BEGIN CERTIFICATE REQUEST-----", "-----END CERTIFICATE REQUEST-----")
+
+class Certificate(X509Base):
     """
     Object represents a x509 certificate.
     """
@@ -75,34 +105,7 @@ class Certificate(object):
         Constructor.
         """
         self.__data = None
-        
-    def load(self, fp, fmt = "PEM"):
-        """
-        Loads a certificate from file or a stream.
-        
-        @param fp: Input stream that allows reading data.
-        @param fmt: Type of the file ("PEM" or "DER"). Default "PEM".
-        @raise Exception: If data cannot be read, an exception is raised.
-        """
-        if fmt == "PEM":
-            self.__data = encoding.fromPem(fp, "-----BEGIN CERTIFICATE-----", "-----END CERTIFICATE-----")
-            if len(self.__data) == 0:
-                raise Exception("failed to import data as PEM")
-            return True
-        if fmt == "DER":
-            self.__data = fp.read()
-            return True
-        raise Exception("unknown format %s" % (fmt))
-
-    def toPem(self, fp):
-        """
-        Writes the certificate as PEM.
-        
-        @param fp: The file to write to.
-        """
-        fp.write("-----BEGIN CERTIFICATE-----\n")
-        fp.write(encoding.toPem(self.__data))
-        fp.write("-----END CERTIFICATE-----\n")
+        self._setBeginEnd("-----BEGIN CERTIFICATE-----", "-----END CERTIFICATE-----")
 
 class RsaKeyPair(object):
     """
