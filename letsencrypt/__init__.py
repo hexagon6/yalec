@@ -78,7 +78,7 @@ class WaitAuthzResponse(object):
             self.error = structure["error"]
     
 # specification at https://ietf-wg-acme.github.io/acme/
-# TODO: 6.4, 6.5, 6.8
+# TODO: 6.4, 6.5
 # TODO: handle responses, raise exceptions on error
 class LeService(object):
     NEW_AUTHZ   = u'new-authz'
