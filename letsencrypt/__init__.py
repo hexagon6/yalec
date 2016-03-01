@@ -196,11 +196,11 @@ class LeService(object):
             self.cleanupChallenge(auth)
 
             if waitResp.authzStatus == "invalid":
-                message = self.__errorFromStructure("error during new-reg", waitResp.error)
+                message = self.__errorFromStructure("error during authentication", waitResp.error)
                 raise Exception(message, waitResp.error)
 
             if not waitResp.valid:
-                message = self.__errorFromStructure("unknown error during registration", waitResp.error)
+                message = self.__errorFromStructure("unknown error during authentication", waitResp.error)
                 raise Exception(message, waitResp.error)
         
     def newAuthz(self, identifier):
@@ -359,7 +359,7 @@ class LeService(object):
                 structure = json.load(data)
             except:
                 pass
-            message = self.__errorFromStructure("%d: error during triggering challenge" % (resp), structure)
+            message = self.__errorFromStructure("%d: error during certificate request" % (resp), structure)
             raise Exception(message, structure)
         
         logging.info("wait for certificate")
@@ -381,13 +381,35 @@ class LeService(object):
                 structure = json.load(data)
             except:
                 pass
-            message = self.__errorFromStructure("%d: error during triggering challenge" % (resp), structure)
+            message = self.__errorFromStructure("%d: error while waiting for certificate" % (resp), structure)
             raise Exception(message, structure)
 
         logging.info("got certificate. create certificate object.")
         cert = self.__Certificate()
         cert.load(data, fmt = "DER")
         return cert
+    
+    def revokeCert(self, cert):
+        """
+        Revokey the certificate provided.
+        
+        @param cert: The certificate to be revoked.
+        @raise Exception: Raises an exception if revocation has failed.
+        """
+        logging.info("revoke cert")
+        postArr = {"resource" : "revoke-cert", "certificate": cert.getJwsFormat()}
+        postData = self.__userKey.signJsonArray(postArr, self.__nonce)
+        http = self.__newHttp(self.__directory["revoke-cert"])
+        http.preparePost(postData, ["Nonce: %s" % (self.__nonce),])
+        resp = http.perform()
+        data = http.getData()
+        self.__keepNonce(http)
+        if resp == 200:
+            logging.info("revokation has been successful")
+            return
+        structure = json.load(data)
+        message = self.__errorFromStructure("%d: error during revocation" % (resp), structure)
+        raise Exception(message, structure)
         
     def createMailContact(self, mail):
         '''
