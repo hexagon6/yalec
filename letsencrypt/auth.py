@@ -1,5 +1,5 @@
 from os import makedirs, path, remove
-from config import WEBDIR, CHALLENGE_PREFIX
+from config import CHALLENGE_PREFIX
 
 import logging
 
@@ -22,7 +22,7 @@ class HttpAuthenticator(object):
         """
         pass
 
-    def prepare(self, userKey, challenge, keyAuthorization):
+    def prepare(self, userKey, challenge, keyAuthorization, config = {}):
         """
         Creates the challenge file. It will also create the necessary directory
         structure, if it does not exist.
@@ -36,7 +36,9 @@ class HttpAuthenticator(object):
         @param keyAuthorization: The JWK thubmprint of the user-key. This will
             be written to the file.
         """
-        self.__chllDir = path.join(WEBDIR, CHALLENGE_PREFIX)
+        if not config.has_key("WEBDIR"):
+            raise Exception("WEBDIR not found in config")
+        self.__chllDir = path.join(config["WEBDIR"], CHALLENGE_PREFIX)
         chllFile = path.join(self.__chllDir, challenge["token"])
         logging.info("try to create authorization file %s" % (chllFile))
         if not path.exists(self.__chllDir):

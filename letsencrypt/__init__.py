@@ -100,6 +100,7 @@ class LeService(object):
         self.__Authenticators = Authenticators
         self.__Certificate = Certificate
         self.__userKey = None
+        self.__config = {}
     
     def setUserKey(self, userKey):
         """
@@ -119,6 +120,12 @@ class LeService(object):
         """
         self.__userKey = userKey
     
+    def setConfigEntry(self, name, value):
+        """
+        Sets a config-entry that is delivered to the authentifactors used.
+        """
+        self.__config[name] = value
+        
     def updateDirectory(self):
         """
         Updates the directory information.
@@ -274,7 +281,7 @@ class LeService(object):
             triggered again for cleanup.
         """
         auth = self.__Authenticators[challenge["type"]]()
-        auth.prepare(self.__userKey, challenge, keyAuthorization)
+        auth.prepare(self.__userKey, challenge, keyAuthorization, self.__config)
         return auth
     
     def triggerChallenge(self, challenge, keyAuthorization):
