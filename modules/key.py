@@ -45,12 +45,14 @@ class KeyModule(object):
         command += "# create key with the following commands:\n"
         command += "openssl genrsa -out {0} {1} ; chmod 600 {0}\n".format(keyout, bits)
         if self.__name == "serverkey":
+            csrout = self.__optsMap["--csrout"][:1][0]
             command += "# create csr with the following commands:\n"
             
             domains = self.__optsMap["--domain"]
             firstDomain = domains[0]
             sanConfig = ""
             sanUse = ""
+            sanClear = ""
             if len(domains) > 1:
                 sanConfig = "TMPFILE=$(mktemp); "
                 sanConfig += """tee $TMPFILE <<EOF
@@ -72,7 +74,7 @@ subjectAltName = @alt_names
                 sanUse = " -reqexts SAN -config $TMPFILE"
                 sanClear = "rm $TMPFILE"
             
-            command += "openssl req -new -key server-privkey.pem -out csr.pem -subj \"/CN={0}/\"{1}\n".format(firstDomain, sanUse)
+            command += "openssl req -new -key \"{0}\" -out \"{1}\" -subj \"/CN={2}/\"{3}\n".format(keyout, csrout, firstDomain, sanUse)
             command += sanClear
         print command
         
@@ -94,16 +96,17 @@ subjectAltName = @alt_names
         """
         print """module {0}
 parameters:
-    --help   - show help and exit
-    --keyout - file to write the private key to [mandatory]
-    --bits   - bitsize of RSA key (range: 2048-4096) [optional, default 4096]
-    --cmd    - shows openssl command that can be used to create the key instead
-               of creating the key internally [mandatory for now]
-               Note: mandatory for now as internal key-creation not yet
-                     supported""".format(name)
+    --help          - show help and exit
+    --keyout=<file> - file to write the private key to [mandatory]
+    --bits=<bits>   - bitsize of RSA key (range: 2048-4096) [optional]
+    --cmd           - shows openssl command that can be used to create the key
+                      instead of creating the key internally [mandatory for now]
+                      Note: mandatory for now as internal key-creation not yet
+                      supported""".format(name)
         if name == "serverkey":
-            print """    --csrout - file to write the CSR to [mandatory]
-    --domain - the domain listed in the CSR [mandatory]
-               multiple domains can be added repeating the command. if so, the
-               first domain will be stored within subject and following domains
-               within SAN fields."""
+            print """    --csrout        - file to write the CSR to [mandatory]
+    --domain=<dom>  - the domain listed in the CSR [mandatory]
+                      Note: multiple domains can be added repeating the command.
+                      if so, the first domain will be stored within subject and
+                      following domains
+                      within SAN fields."""
