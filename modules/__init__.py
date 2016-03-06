@@ -18,13 +18,15 @@ def getOpts(argv, shortopts, longopts, mandatory = [], optsMap = {}):
     try:
         opts, args = getopt.getopt(argv, shortopts, longopts)
         valid = True
-    except getopt.GetoptError:
+        for c, a in opts:
+            if not optsMap.has_key(c):
+                optsMap[c] = []
+            optsMap[c].append(a)
+        for m in mandatory:
+            if m not in optsMap.keys():
+                print "option %s missing" % (m)
+                valid = False
+    except getopt.GetoptError as e:
+        print "error: %s" % (e.msg)
         valid = False
-    for c, a in opts:
-        if not optsMap.has_key(c):
-            optsMap[c] = []
-        optsMap[c].append(a)
-    for m in mandatory:
-        if m not in optsMap.keys():
-            valid = False
     return valid, optsMap
