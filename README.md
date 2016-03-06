@@ -1,4 +1,3 @@
-# yalec
 # yalec is Yet Another Let's Encrypt Client #
 
 Note: This is yet work in progress. While signing a CSR will basically work,
@@ -80,14 +79,18 @@ This will output you something like this:
 openssl genrsa -out certs/user.key 4096 ; chmod 600 certs/user.key
 ```
 
-If you execute the openssl-command, it will create a new file within the certs
-directory that contains your user-key.
+If you execute the openssl-command, it will create a new key file within the
+certs directory that contains your user-key.
+
+__Note: You need to keep the key-file written private, as this is your private key.__
 
 Now you can register that user by calling:
 
 ```bash
 python2 yalec.py register --userkey=certs/user.key --mail="me@example.com" --base="https://acme-v01.api.letsencrypt.org"
 ```
+
+__Note: If you have the guts, you can pipe this directly into bash. If you try this, please check first, if command outputs sane commands.__
 
 ### Creating a CSR for your domain ###
 
@@ -123,10 +126,15 @@ openssl req -new -key "certs/server.key" -out "certs/server.csr" -subj "/CN=exam
 rm $TMPFILE
 ```
 
+__Note: You need to keep the key-file written private, as this is your private key. If you key gets compromised, create a new one instantly as your encryption is insecure from that point of time. If you already have requested a certificate for the key, revoke it.__
+
 If you execute the bunch of commands outputed by yalec, you should have a new
 server.key file and a server.csr file that allows creating a proper csr.
 
-You can always reuse the CSR created for certificate renewal.
+You can always reuse the CSR created for certificate renewal but it might be
+wise to create a new private key and a new CSR from time to time.
+
+__Note: If you have the guts, you can pipe this directly into bash. If you try this, please check first, if command outputs sane commands.__
 
 ### Retrieving your certificate ###
 
@@ -155,4 +163,12 @@ server. The ACME server tells yalec a name of a file to be placed at
 http://domain/.well-known/acme-challenge/<filename>. After the file has been
 placed there, yalec tells the server to retrieve the file which then allows
 the creation of certificates of the domain for the given user.
+
+### Revokation of certificated ###
+
+TBD.: This is not yet available via commandline but will be added soon.
+
+## License ##
+
+TBD
 
