@@ -183,9 +183,14 @@ it to your certificate file:
 
 ### Revokation of certificated ###
 
-TBD.: This is not yet available via commandline but will be added soon.
+To revoke a certificate, you need the user-key and the certificate to be
+revoked. Just use the __revoke__ module. For example:
+
+```bash
+python2 yalec.py revoke --userkey=certs/user.key --cert=certs/server.crt
+```
 
 ## License ##
 
-TBD
+yalec is licensed under LGPL v2.1. See LICENSE file for more information.
 
