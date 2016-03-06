@@ -71,7 +71,7 @@ subjectAltName = @alt_names
                     sanConfig += "DNS.%d=%s\n" % (n + 1, v)
                 sanConfig += "EOF\n"
                 command += sanConfig
-                sanUse = " -reqexts SAN -config $TMPFILE"
+                sanUse = " -config $TMPFILE"
                 sanClear = "rm $TMPFILE"
             
             command += "openssl req -new -key \"{0}\" -out \"{1}\" -subj \"/CN={2}/\"{3}\n".format(keyout, csrout, firstDomain, sanUse)
