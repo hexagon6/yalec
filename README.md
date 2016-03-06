@@ -50,22 +50,34 @@ receive a new certificate. Some of the steps only need to be done before you
 are able to receive your first certificate. Other need to be done before you
 can renew an already issued certificate.
 
+### Testing ###
+
+Let's Encrypt restricts the number of certificates that can be requested for a
+specific domain by a specific user per month. So before starting your production
+setup, use the staging-environment provided by Let's Encrypt to test it. For
+this, you should use https://acme-staging.api.letsencrypt.org/directory as
+base address. This is also the default, if you leave out the --base definition
+in the commands below.
+
 ### Registering a user ###
 
 Before you can receive a certificate, you need to register a user. A
 registration basically consists of a user-key and some contact-information.
-During the registration you also accept the terms of service.
+During the registration you also accept the terms of service. This is only
+needed once before requesting your first certificate.
 
 So, we need to create a new user-key and then register it via yalec. Yalec does
 not yet allow to create user-keys internally but provides a function that shows
 you a command that allows to create a key via openssl:
 
-`python2 yalec.py userkey --keyout certs/user.key --bits 4096 --cmd`
+```bash
+python2 yalec.py userkey --keyout=certs/user.key --bits=4096 --cmd
+```
 
 This will output you something like this:
 ```bash
-  # create key with the following commands:
-  openssl genrsa -out certs/user.key 4096 ; chmod 600 certs/user.key
+# create key with the following commands:
+openssl genrsa -out certs/user.key 4096 ; chmod 600 certs/user.key
 ```
 
 If you execute the openssl-command, it will create a new file within the certs
@@ -73,8 +85,74 @@ directory that contains your user-key.
 
 Now you can register that user by calling:
 
-code(
-python2 yalec.py register --userkey certs/user.key --mail "me@example.com"
-)
+```bash
+python2 yalec.py register --userkey=certs/user.key --mail="me@example.com" --base="https://acme-v01.api.letsencrypt.org"
+```
 
+### Creating a CSR for your domain ###
+
+Like creating user-keys you can use yalec to provide a basic command that allows
+creating a CSR for your domain or domains. This implies to create a new private
+key for the server as well.
+
+```bash
+python2 yalec.py serverkey --keyout=certs/server.key --csrout=certs/server.csr --domain=example.com --domain=www.example.com --domain=mail.example.com --cmd
+```
+
+This will output something like this:
+```bash
+# create key with the following commands:
+openssl genrsa -out certs/server.key 4096 ; chmod 600 certs/server.key
+# create csr with the following commands:
+TMPFILE=$(mktemp); tee $TMPFILE <<EOF
+[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+
+[req_distinguished_name]
+
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1=example.com
+DNS.2=www.example.com
+DNS.3=mail.example.com
+EOF
+openssl req -new -key "certs/server.key" -out "certs/server.csr" -subj "/CN=example.com/" -config $TMPFILE
+rm $TMPFILE
+```
+
+If you execute the bunch of commands outputed by yalec, you should have a new
+server.key file and a server.csr file that allows creating a proper csr.
+
+You can always reuse the CSR created for certificate renewal.
+
+### Retrieving your certificate ###
+
+As you have registered your user and created a CSR you should be able to request
+your certificate now.
+
+```bash
+python2 yalec.py sign --userkey=certs/user.key --certout=certs/server.crt --csr=certs/server.csr --domain=example.com --domain=www.example.com --domain=mail.example.com webdir=/tmp/acme --base="https://acme-v01.api.letsencrypt.org"
+```
+
+You can just reuse this command everytime you want to renew your certificate.
+
+During this request, you have to name all domains of the CSR again and tell
+the script, where it finds your webroot by the webdir option.
+
+The user acutally executing the command needs access to the webdir (or at least
+to the subfolder .well-known/acme-challenge and needs proper permissions to add
+files there.
+
+For each domain named, this folder must be accessible via
+http://<domain>/.well-known/acme-challenge.
+
+So what the command does is:
+For each domain in the list of domains, it requests a challenge from the ACME
+server. The ACME server tells yalec a name of a file to be placed at
+http://domain/.well-known/acme-challenge/<filename>. After the file has been
+placed there, yalec tells the server to retrieve the file which then allows
+the creation of certificates of the domain for the given user.
 
