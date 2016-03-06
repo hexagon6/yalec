@@ -1,5 +1,6 @@
 from os import makedirs, path, remove
 from config import CHALLENGE_PREFIX
+from letsencrypt import LeException
 
 import logging
 
@@ -37,7 +38,7 @@ class HttpAuthenticator(object):
             be written to the file.
         """
         if not config.has_key("WEBDIR"):
-            raise Exception("WEBDIR not found in config")
+            raise LeException("WEBDIR not found in config")
         self.__chllDir = path.join(config["WEBDIR"], CHALLENGE_PREFIX)
         chllFile = path.join(self.__chllDir, challenge["token"])
         logging.info("try to create authorization file %s" % (chllFile))

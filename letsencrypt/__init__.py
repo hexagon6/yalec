@@ -7,6 +7,20 @@ from time import sleep
 
 import logging
 
+class LeException(Exception):
+    """
+    Specialized exception for the LeService actions.
+    """
+    def __init__(self, msg, data = {}):
+        """
+        Constructor.
+        
+        @param msg: Message string of the exception.
+        @param data: Additional data. Optional.
+        """
+        self.msg = msg
+        self.data = data
+        
 class NewRegResponse(object):
     """
     Response object containing data received during a new-reg execution.
@@ -146,12 +160,12 @@ class LeService(object):
         http.prepareGet()
         resp = http.perform()
         if resp <> 200:
-            raise Exception('invalid server response %d' % resp) 
+            raise LeException("invalid server response %d" % resp) 
         data = http.getData()
         self.__directory = json.load(data)
         for e in self.DIR_MIN:
             if not e in self.__directory:
-                raise Exception("%s not found in directory" % (e))
+                raise LeException("%s not found in directory" % (e))
         self.__keepNonce(http)
     
     def newReg(self, contact, agreement):
@@ -175,7 +189,7 @@ class LeService(object):
         # TODO: add function to update/read registation (seet 6.3.)
         if resp not in [201, 409]:
             message = self.__errorFromStructure("%d: error during new-reg" % (resp), structure)
-            raise Exception(message, structure)
+            raise LeException(message, structure)
         logging.info("registration was: %d - %s" % (resp, ("registered" if resp == 201 else "account exists")))
         location = self.__getLocation(http)
         return NewRegResponse(resp == 201, location, resp, structure)
@@ -192,7 +206,7 @@ class LeService(object):
         authz = self.newAuthz(identifier)
         challenges = self.selectChallenges(authz.challanges, authz.combinations)
         if len(challenges) == 0:
-            raise Exception("no valid combination of challenges found", None)
+            raise LeException("no valid combination of challenges found")
         for challenge in challenges:
             self.__checkToken(challenge["token"])
             keyAuthorization = ".".join([challenge["token"], self.__userKey.getJwkThumbprint()])
@@ -204,11 +218,11 @@ class LeService(object):
 
             if waitResp.authzStatus == "invalid":
                 message = self.__errorFromStructure("error during authentication", waitResp.error)
-                raise Exception(message, waitResp.error)
+                raise LeException(message, waitResp.error)
 
             if not waitResp.valid:
                 message = self.__errorFromStructure("unknown error during authentication", waitResp.error)
-                raise Exception(message, waitResp.error)
+                raise LeException(message, waitResp.error)
         
     def newAuthz(self, identifier):
         """
@@ -232,7 +246,7 @@ class LeService(object):
         self.__keepNonce(http)
         if not resp == 201:
             message = self.__errorFromStructure("%d: error during new-authz" % (resp), structure)
-            raise Exception(message, structure)
+            raise LeException(message, structure)
         return NewAuthzResponse(resp, structure)
 
     def selectChallenges(self, challenges, combinations):
@@ -309,7 +323,7 @@ class LeService(object):
         self.__keepNonce(http)
         if resp not in [200, 202]:
             message = self.__errorFromStructure("%d: error during triggering challenge" % (resp), structure)
-            raise Exception(message, structure)
+            raise LeException(message, structure)
         return ChallengeResponse(resp, structure)
         
     def cleanupChallenge(self, auth):
@@ -367,7 +381,7 @@ class LeService(object):
             except:
                 pass
             message = self.__errorFromStructure("%d: error during certificate request" % (resp), structure)
-            raise Exception(message, structure)
+            raise LeException(message, structure)
         
         logging.info("wait for certificate")
         location = self.__getLocation(http)
@@ -389,7 +403,7 @@ class LeService(object):
             except:
                 pass
             message = self.__errorFromStructure("%d: error while waiting for certificate" % (resp), structure)
-            raise Exception(message, structure)
+            raise LeException(message, structure)
 
         logging.info("got certificate. create certificate object.")
         cert = self.__Certificate()
@@ -416,7 +430,7 @@ class LeService(object):
             return
         structure = json.load(data)
         message = self.__errorFromStructure("%d: error during revocation" % (resp), structure)
-        raise Exception(message, structure)
+        raise LeException(message, structure)
         
     def createMailContact(self, mail):
         '''
@@ -518,7 +532,7 @@ class LeService(object):
         base = urlparse(self.__baseUrl)
         site = urlparse(url)
         if not site.hostname == base.hostname:
-            raise Exception("hostname mismatch: base=%s, url=%s" % (base.hostname, site.hostname))
+            raise LeException("hostname mismatch: base=%s, url=%s" % (base.hostname, site.hostname))
     
     def __newHttp(self, url):
         """
@@ -540,5 +554,5 @@ class LeService(object):
         """
         rex = re.compile("^[a-zA-Z0-9-_]*$")
         if rex.match(token) is None:
-            raise Exception("invalid token")
+            raise LeException("ACME service provided invalid token")
 

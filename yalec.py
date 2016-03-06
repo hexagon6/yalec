@@ -3,8 +3,10 @@ from sys import argv, exit
 from modules.key import KeyModule
 from modules.register import RegisterModule
 from modules.sign import SignModule
+from modules.revoke import RevokeModule
+from letsencrypt import LeException
 
-modules = {"userkey" : KeyModule, "serverkey": KeyModule, "register" : RegisterModule, "sign" : SignModule }
+modules = {"userkey" : KeyModule, "serverkey": KeyModule, "register" : RegisterModule, "sign" : SignModule, "revoke" : RevokeModule }
 
 def printHelp(argv):
     global modules
@@ -24,8 +26,10 @@ def main(argv):
         printHelp(argv)
         exit(1)
     module = modules[argv[1]](argv[1:])
-    module.execute()
-    
+    try:
+        module.execute()
+    except LeException as e:
+        print "error: %s" % (e.msg)
 
 if __name__ == '__main__':
     main(argv)
