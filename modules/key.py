@@ -100,7 +100,7 @@ parameters:
     --cmd    - shows openssl command that can be used to create the key instead
                of creating the key internally [mandatory for now]
                Note: mandatory for now as internal key-creation not yet
-                     supported"""
+                     supported""".format(name)
         if name == "serverkey":
             print """    --csrout - file to write the CSR to [mandatory]
     --domain - the domain listed in the CSR [mandatory]
