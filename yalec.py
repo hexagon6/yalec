@@ -1,8 +1,10 @@
 from sys import argv, exit
 
 from modules.key import KeyModule
+from modules.register import RegisterModule
+from modules.sign import SignModule
 
-modules = {"userkey" : KeyModule, "serverkey": KeyModule}
+modules = {"userkey" : KeyModule, "serverkey": KeyModule, "register" : RegisterModule, "sign" : SignModule }
 
 def printHelp(argv):
     global modules
