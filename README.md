@@ -146,6 +146,8 @@ python2 yalec.py sign --userkey=certs/user.key --certout=certs/server.crt --csr=
 ```
 
 You can just reuse this command everytime you want to renew your certificate.
+This will be like every 2 Month (or 30 days before the certificate validity
+ends).
 
 During this request, you have to name all domains of the CSR again and tell
 the script, where it finds your webroot by the webdir option.
@@ -163,6 +165,21 @@ server. The ACME server tells yalec a name of a file to be placed at
 http://domain/.well-known/acme-challenge/<filename>. After the file has been
 placed there, yalec tells the server to retrieve the file which then allows
 the creation of certificates of the domain for the given user.
+
+### Installing the certificate ###
+
+To configure your webserver use the server-key created as private key and the
+server-certiticate as certificate file (server.key and server.crt in the example
+above).
+
+You also need to provide a full certificate chain. For some servers, the chain
+must be placed into the server-certificate file. If this is the case, you can
+just do it by downloading the issuing certificate from Let's Encrypt and attach
+it to your certificate file:
+
+```bash
+(cat server.crt ; curl "https://letsencrypt.org/certs/letsencryptauthorityx1.pem") > server.chain.crt
+```
 
 ### Revokation of certificated ###
 
