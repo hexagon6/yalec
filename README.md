@@ -58,6 +58,18 @@ this, you should use https://acme-staging.api.letsencrypt.org/directory as
 base address. This is also the default, if you leave out the --base definition
 in the commands below.
 
+### Necessary privileges ###
+
+First of all: this tool should __not be run as root__. Please execute it as a
+user with the least possible privileges.
+
+To be able to perform the authorization procedure (authz), yalec needs
+write-permissions on a directory that can be reached for all domains that
+should be contained within the certificate on the directory
+http://<domain>/.well-known/acme-challenge. It is sufficient to set explicit
+permissions that allow the creation and deletion of files on that directory for
+the user executing yalec.
+
 ### Registering a user ###
 
 Before you can receive a certificate, you need to register a user. A
