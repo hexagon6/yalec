@@ -43,8 +43,8 @@ class RegisterModule(object):
             return 1
         
         base = self.__optsMap["--base"][:1][0]
-        terms = self.__optsMap["--terms"]
-        mail = self.__optsMap["--mail"]
+        terms = self.__optsMap["--terms"][:1][0]
+        mail = self.__optsMap["--mail"][:1][0]
         
         userKey = KeyPair()
         userKey.load(open(userKeyFile, "r"))
