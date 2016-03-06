@@ -60,15 +60,13 @@ So, we need to create a new user-key and then register it via yalec. Yalec does
 not yet allow to create user-keys internally but provides a function that shows
 you a command that allows to create a key via openssl:
 
-code(
-python2 yalec.py userkey --keyout certs/user.key --bits 4096 --cmd
-) 
+`python2 yalec.py userkey --keyout certs/user.key --bits 4096 --cmd`
 
 This will output you something like this:
-code(
-# create key with the following commands:
-openssl genrsa -out certs/user.key 4096 ; chmod 600 certs/user.key
-)
+```bash
+  # create key with the following commands:
+  openssl genrsa -out certs/user.key 4096 ; chmod 600 certs/user.key
+```
 
 If you execute the openssl-command, it will create a new file within the certs
 directory that contains your user-key.
