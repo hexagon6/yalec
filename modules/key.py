@@ -83,6 +83,22 @@ class KeyModule(object):
         fp.close()
         print "done"
         
+        if self.__name == "serverkey":
+            csrout = self.__optsMap["--csrout"][:1][0]
+            domains = self.__optsMap["--domain"]
+            
+            fp = open(csrout, "w")
+            print "generating csr."
+            req = crypto.X509Req()
+            req.get_subject().CN = domains[0]
+            req.set_pubkey(key)
+            extensions = [crypto.X509Extension("subjectAltName", False, ", ".join(["DNS:%s" % x for x in domains]))]
+            req.add_extensions(extensions)
+            print "writing csr."
+            fp.write(crypto.dump_certificate_request(crypto.FILETYPE_PEM, req))
+            fp.flush()
+            fp.close()
+        
     def __executeCmd(self):
         """
         Executes the command output module.
