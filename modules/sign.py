@@ -32,6 +32,7 @@ class SignModule(object):
         """
         Constructor.
         """
+        # TODO: add reading all domains from the CSR instead of manual definition
         if len(argv) < 1:
             raise Exception("No module defined.")
         self.__name = argv[0]
