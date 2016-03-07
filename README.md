@@ -23,6 +23,9 @@ There is one further (optional) dependency, if you like to use internal creation
 of certificates instead of command output:
 * pyopenssl
 
+If pyopenssl is installed, the _--cmd_ switch is optional for _userkey_ and
+_serverkey_ modules.
+
 ### Installing dependencies ###
 
 pycurl and pycrypto need to be installed on the executing system via:
