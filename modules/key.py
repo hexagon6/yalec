@@ -40,7 +40,12 @@ class KeyModule(object):
         shortopts = ["h"]
         longopts = ["help", "cmd", "bits=", "keyout="]
         defaults = {"--bits": ["4096",]}
-        mandatory = ["--keyout", "--cmd"]
+        mandatory = ["--keyout"]
+        try:
+            self.__openssl = __import__("OpenSSL")
+        except:
+            mandatory.append("--cmd")
+        
         if self.__name == "serverkey":
             longopts += ["domain=", "csrout="]
             mandatory += ["--csrout", "--domain"]
@@ -57,6 +62,31 @@ class KeyModule(object):
         if not self.__valid or any(x[0] in ["h", "help"] for x in self.__optsMap.keys()):
             KeyModule.printHelp(self.__name)
             return 1
+        if self.__optsMap.has_key("--cmd"):
+            return self.__executeCmd()
+        return self.__executeInternal()
+        
+    def __executeInternal(self):
+        """
+        Executes the internal key creation using pyopenssl.
+        """
+        bits = int(self.__optsMap["--bits"][:1][0])
+        keyout = self.__optsMap["--keyout"][:1][0]
+        fp = open(keyout, "w")
+        print "generating key."
+        crypto = self.__openssl.crypto
+        key = crypto.PKey()
+        key.generate_key(crypto.TYPE_RSA, bits)
+        print "write key to file."
+        fp.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
+        fp.flush()
+        fp.close()
+        print "done"
+        
+    def __executeCmd(self):
+        """
+        Executes the command output module.
+        """
         bits = self.__optsMap["--bits"][:1][0]
         keyout = self.__optsMap["--keyout"][:1][0]
         command = ""
@@ -118,9 +148,8 @@ parameters:
     --keyout=<file> - file to write the private key to [mandatory]
     --bits=<bits>   - bitsize of RSA key (range: 2048-4096) [optional]
     --cmd           - shows openssl command that can be used to create the key
-                      instead of creating the key internally [mandatory for now]
-                      Note: mandatory for now as internal key-creation not yet
-                      supported""".format(name)
+                      instead of creating the key internally
+                      Note: mandatory, if pyopenssl not installed""".format(name)
         if name == "serverkey":
             print """    --csrout        - file to write the CSR to [mandatory]
     --domain=<dom>  - the domain listed in the CSR [mandatory]
