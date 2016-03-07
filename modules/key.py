@@ -17,6 +17,7 @@
 #
 
 from modules import getOpts
+import os
 
 # the key-creation is still work in progress. for not we only printout commands
 # that should help to create keys using openssl on commandline. 
@@ -72,7 +73,7 @@ class KeyModule(object):
         """
         bits = int(self.__optsMap["--bits"][:1][0])
         keyout = self.__optsMap["--keyout"][:1][0]
-        fp = open(keyout, "w")
+        fp = os.fdopen(os.open(keyout, os.O_WRONLY | os.O_CREAT, 0600), "w")
         print "generating key."
         crypto = self.__openssl.crypto
         key = crypto.PKey()
