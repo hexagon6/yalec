@@ -19,6 +19,10 @@ For now, the client depends on tree packages:
 * pycurl
 * pycrypto
 
+There is one further (optional) dependency, if you like to use internal creation
+of certificates instead of command output:
+* pyopenssl
+
 ### Installing dependencies ###
 
 pycurl and pycrypto need to be installed on the executing system via:
@@ -77,12 +81,32 @@ registration basically consists of a user-key and some contact-information.
 During the registration you also accept the terms of service. This is only
 needed once before requesting your first certificate.
 
-So, we need to create a new user-key and then register it via yalec. Yalec does
-not yet allow to create user-keys internally but provides a function that shows
-you a command that allows to create a key via openssl:
+#### With pyopenssl ####
+
+If you have pyopenssl installed, you can create a new user-key using the
+following command:
 
 ```bash
-python2 yalec.py userkey --keyout=certs/user.key --bits=4096 --cmd
+python2 yalec.py userkey --keyout=certs/user.key
+```
+
+__Note: You need to keep the key-file written private, as this is your private key.__
+
+After creating the key, you can register it by calling the following command
+with appropriate parameters:
+
+```bash
+python2 yalec.py register --userkey=certs/user.key --mail="me@example.com" --base="https://acme-v01.api.letsencrypt.org"
+```
+
+#### Without pyopenssl ####
+
+So, we need to create a new user-key and then register it via yalec. If you do
+not want to use pyopenssl module, yalec allows you to create some command output
+that can be used to create a new user-key via commandline:
+
+```bash
+python2 yalec.py userkey --keyout=certs/user.key --cmd
 ```
 
 This will output you something like this:
@@ -109,6 +133,24 @@ __Note: If you have the guts, you can pipe this directly into bash. If you try t
 Like creating user-keys you can use yalec to provide a basic command that allows
 creating a CSR for your domain or domains. This implies to create a new private
 key for the server as well.
+
+#### With pyopenssl ####
+
+If you have pyopenssl installed, just call something like
+
+```bash
+python2 yalec.py serverkey --keyout=certs/server.key --csrout=certs/server.csr --domain=example.com --domain=www.example.com --domain=mail.example.com
+```
+
+This will create a new server-key and a new signing-request that allows you to
+receive a new certificate.
+
+__Note: You need to keep the key-file written private, as this is your private key. If you key gets compromised, create a new one instantly as your encryption is insecure from that point of time. If you already have requested a certificate for the key, revoke it.__
+
+#### Without pyopenssl ####
+
+Likewise the user creation command, yalec allows you to output a command that
+can be executed in order to create a new CSR using openssl via commandline:
 
 ```bash
 python2 yalec.py serverkey --keyout=certs/server.key --csrout=certs/server.csr --domain=example.com --domain=www.example.com --domain=mail.example.com --cmd
