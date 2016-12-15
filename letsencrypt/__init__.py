@@ -22,6 +22,7 @@ import json
 import re
 from urlparse import urlparse
 from time import sleep
+from os import system
 
 import logging
 
@@ -212,7 +213,7 @@ class LeService(object):
         location = self.__getLocation(http)
         return NewRegResponse(resp == 201, location, resp, structure)
 
-    def simpleAuthz(self, identifier):
+    def simpleAuthz(self, identifier, script = []):
         """
         This method allows a simple way to perform a full authz for the given
         identifier. It will request a challenge, select appropriate algorithms,
@@ -229,6 +230,8 @@ class LeService(object):
             self.__checkToken(challenge["token"])
             keyAuthorization = ".".join([challenge["token"], self.__userKey.getJwkThumbprint()])
             auth = self.prepareChallenge(challenge, keyAuthorization)
+            for command in script:
+                 system(command)
             triggerResp = self.triggerChallenge(challenge, keyAuthorization)
             waitResp = self.waitAuthzDone(triggerResp.uri)
             # TODO: cleanup skipped on errors

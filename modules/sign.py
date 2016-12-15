@@ -42,9 +42,9 @@ class SignModule(object):
             raise Exception("unknown module name %s" % (self.__name))
 
         shortopts = ["h"]
-        longopts = ["help", "userkey=", "csr=", "base=", "domain=", "certout=", "webdir="]
+        longopts = ["help", "userkey=", "csr=", "base=", "domain=", "certout=", "webdir=", "script="]
         mandatory = ["--userkey", "--csr", "--domain", "--certout"]
-        defaults = {"--base" : [config.BASE], "--webdir" : [config.WEBDIR]}
+        defaults = {"--base" : [config.BASE], "--webdir" : [config.WEBDIR], "--script" : []}
         self.__valid, self.__optsMap = getOpts(argv[1:], shortopts, longopts, mandatory, defaults)
 
     def execute(self):
@@ -81,10 +81,11 @@ class SignModule(object):
         le.setUserKey(userKey)
         le.setConfigEntry("WEBDIR", webdir)
         le.updateDirectory()
-        
+
+        script = self.__optsMap["--script"]
         for domain in self.__optsMap["--domain"]:
             print "perform authentication for domain %s" % (domain)
-            le.simpleAuthz(le.createDnsAuth(domain))
+            le.simpleAuthz(le.createDnsAuth(domain), script)
         print "request certificate for csr"
         cert = le.newCert(csr)
         
